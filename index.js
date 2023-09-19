@@ -52,19 +52,10 @@ app.get('/api/hello', function(req, res) {
 app.post('/api/shorturl', async (req, res) => {
   const url = req.body.url
 
-  const aux = await Url.findOne({url: url})
-  if (aux) {
-    res.json({
-      original_url: aux.url,
-      short_url: aux.short_url
-    })
-    return
-  }
-
   const dnslookup = dns.lookup(urlparser.parse(url).hostname, 
     async (err, address) => {
       if (!address) {
-        res.send({ error: 'invalid url' })
+        res.send({ error: 'Invalid URL' })
         return
       }
 
@@ -72,7 +63,7 @@ app.post('/api/shorturl', async (req, res) => {
 
       const model = new Url({
         url: req.body.url,
-        short_url: urls.length + 1
+        short_url: urls.length
       })
 
       const result = await model.save()
@@ -88,12 +79,8 @@ app.post('/api/shorturl', async (req, res) => {
 
 app.get('/api/shorturl/:short_url', async (req, res) => {
   const short_url = req.params.short_url
-  try {
-    const url = await Url.findOne({ short_url: +short_url })
-    res.redirect(url.url)
-  } catch (err) {
-    res.send(`Bad request. Error: ${err}`)
-  }
+  const url = await Url.findOne({ short_url: +short_url })
+  res.redirect(url.url)
 })
 
 app.listen(port, function() {
